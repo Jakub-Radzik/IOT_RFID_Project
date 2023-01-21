@@ -1,7 +1,7 @@
 {
-    "useTabs": false,
-    "printWidth": 80,
-    "arrowParens": "avoid",
-    "bracketSameLine": false,
-    "jsxSingleQuote": true
+  "useTabs": false,
+  "printWidth": 80,
+  "arrowParens": "avoid",
+  "bracketSameLine": false,
+  "jsxSingleQuote": true
 }
