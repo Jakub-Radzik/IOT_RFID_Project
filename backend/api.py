@@ -49,7 +49,7 @@ def addLog():
 
 @app.route("/logs/get", methods=['GET'])
 def getLogs():
-    all_logs = [log for log in logs.objects]
+    all_logs = [log.to_json() for log in logs.objects]
     return make_response(jsonify(all_logs), 200)
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 export type Log = {
-  _id: string;
+  log_id: string;
   date: string;
-  cardId: string;
+  card_uid: string;
+  reader: number;
 };
