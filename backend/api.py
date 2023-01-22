@@ -40,11 +40,11 @@ def addLog():
     reader = request.json.get("reader", None)
 
     date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
-    print("chuj")
+
 
     new_log = logs(log_id=log_id, date=date, card_uid=card_uid, reader=reader)
     new_log.save()
-    print("inny chuj")
+
 
     return make_response("", 201)
 
