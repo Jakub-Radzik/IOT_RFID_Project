@@ -62,17 +62,17 @@ export const LogList: FC<Props> = ({ logs }) => {
         alignItems: "center",
       }}
     >
-        <div style={Row}>
+        {/* <div style={Row}>
             <button onClick={sortHandler}>Sort by date - {sortDirection}</button>
             <input type="text" placeholder="card id" value={filter} onChange={filterHandler}/>
-        </div>
+        </div> */}
       <div style={Row}>
         <div style={Cell}>ID</div>
         <div style={Cell}>Card ID</div>
         <div style={Cell}>Date</div>
         <div style={Cell}>Time</div>
       </div>
-      {sortedLogs.map((log, idx) => (
+      {logs.map((log, idx) => (
         <LogRow log={log} key={idx} />
       ))}
     </div>
