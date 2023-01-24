@@ -8,7 +8,7 @@ from config import *
 from mfrc522 import MFRC522
 from datetime import datetime
 
-BACKEND_API = 'http://localhost:5050'
+BACKEND_API = 'http://localhost:5000'
 
 # obiekt na json i z niego stringify bo przez websocket
 # mogą iść tylko str
