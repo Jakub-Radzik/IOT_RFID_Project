@@ -8,12 +8,12 @@ type Props = {
 };
 
 export const LogRow: FC<Props> = ({ log }) => {
-  const { _id, cardId, date } = log;
+  const { card_uid, date, log_id } = log;
 
   return (
     <div style={Row}>
-      <div style={Cell}>{_id}</div>
-      <div style={Cell}>{cardId}</div>
+      <div style={Cell}>{log_id}</div>
+      <div style={Cell}>{card_uid}</div>
       <div style={Cell}>{formatDate(date)}</div>
       <div style={Cell}>{formatTime(date)}</div>
     </div>

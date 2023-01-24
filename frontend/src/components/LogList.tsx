@@ -24,7 +24,7 @@ export const LogList: FC<Props> = ({ logs }) => {
   const [sortedLogs, setSortedLogs] = useState<Log[]>(logs);
 
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
-  const [filter, setFilter] = useState<string>("");
+  const [filter, setFilter] = useState<string>();
 
   const filterHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilter(e.target.value);
@@ -41,9 +41,9 @@ export const LogList: FC<Props> = ({ logs }) => {
     useEffect(() => {
         if (filter) {
             if(sortDirection === "ASC"){
-                setSortedLogs(logs.filter(log => log.cardId.startsWith(filter)).sort(ASCsortCallback));
+                setSortedLogs(logs.filter(log => log.card_uid.startsWith(filter)).sort(ASCsortCallback));
             }else{
-                setSortedLogs(logs.filter(log => log.cardId.startsWith(filter)).sort(DESCsortCallback));
+                setSortedLogs(logs.filter(log => log.card_uid.startsWith(filter)).sort(DESCsortCallback));
             }
         }else{
             if(sortDirection === "ASC"){
@@ -72,8 +72,8 @@ export const LogList: FC<Props> = ({ logs }) => {
         <div style={Cell}>Date</div>
         <div style={Cell}>Time</div>
       </div>
-      {sortedLogs.map(log => (
-        <LogRow log={log} key={log._id} />
+      {sortedLogs.map((log, idx) => (
+        <LogRow log={log} key={idx} />
       ))}
     </div>
   );
