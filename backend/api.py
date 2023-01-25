@@ -1,5 +1,6 @@
 import datetime
 
+import json
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from flask_mongoengine import MongoEngine
@@ -34,12 +35,21 @@ class logs(db.Document):
 
 @app.route("/logs/add", methods=['POST'])
 def addLog():
-    log_id = request.json.get("id", None)
-    date = request.json.get("date", None)
-    card_uid = request.json.get("card_uid", None)
-    reader = request.json.get("reader", None)
+    json_from_request = json.loads(request.json)
 
-    date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
+    if (type(request.json) is str):
+        log_id = json_from_request.get("id", None)
+        date = json_from_request.get("date", None)
+        card_uid = json_from_request.get("card_uid", None)
+        reader = json_from_request.get("reader", None)
+    else:
+        log_id = request.json.get("id", None)
+        date = request.json.get("date", None)
+        card_uid = request.json.get("card_uid", None)
+        reader = request.json.get("reader", None)
+
+    date = datetime.datetime.strptime(date, '%d-%m-%Y %H:%M:%S')
+
 
     new_log = logs(log_id=log_id, date=date, card_uid=card_uid, reader=reader)
     new_log.save()
