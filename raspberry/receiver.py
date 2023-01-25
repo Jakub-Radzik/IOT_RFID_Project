@@ -9,6 +9,7 @@ from mfrc522 import MFRC522
 from datetime import datetime
 
 BACKEND_API = 'http://localhost:5000'
+WEBSOCKET_URL = 'ws://localhost:7001'
 
 # obiekt na json i z niego stringify bo przez websocket
 # mogą iść tylko str
@@ -19,11 +20,19 @@ BACKEND_API = 'http://localhost:5000'
 
 # function
 async def send(message: str):
-    async with websockets.connect('ws://localhost:7001') as websocket:
+    async with websockets.connect(WEBSOCKET_URL) as websocket:
         await websocket.send(message)
 
 # invoke example
-asyncio.get_event_loop().run_until_complete(send(str(datetime.datetime.now())))
+# a = {
+#     "date": datetime.datetime.now().isoformat(),
+#     "card_uid": 'IDENTYFIKATOR KARTY',
+#     "reader": 1,
+# }
+
+# readyMSG = json.dumps(a)
+
+# asyncio.get_event_loop().run_until_complete(send(readyMSG))
 
 
 def get_json_data(log_id, date, card_uid, reader):
