@@ -1,12 +1,12 @@
+#!/usr/bin/env python3
 import datetime, neopixel, board
-import uuid, random, time
+import uuid, time
 
 import paho.mqtt.client as mqtt
 import RPi.GPIO as GPIO
 
 from config import *
 from mfrc522 import MFRC522
-from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
 import lib.oled.SSD1331 as SSD1331
@@ -20,32 +20,26 @@ class Color:
     green = (0, 128, 0)
     yellow = (255, 255, 0)
 
-class LedHandler:
-    def __init__(self, brightness=1.0 / 32, auto_write=False):
-        self.pixels = neopixel.NeoPixel(board.D18, 8, brightness=brightness, auto_write=auto_write)
-        self.colors = [Color.black for _ in range(8)]
-        self.update_all()
+pixels = neopixel.NeoPixel(board.D18, 8, brightness=1.0 / 32, auto_write=False)
+def clear():
+    pixels.show()
+    pixels.fill((0, 0, 0))
+    pixels.show()
+    
+def successful_reading():
+    pixels.show()
+    pixels.fill(Color.green)
+    pixels.show()
 
-    def update_all(self):
-        for i in range(8):
-            self.pixels[i] = self.colors[i]
-        self.pixels.show()
+def failed_reading():
+    pixels.show()
+    pixels.fill(Color.red)
+    pixels.show()
 
-    def clear(self):
-        self.set_color_all(Color.black)
-        self.update_all()
-
-    def successful_reading(self):
-        self.colors = [Color.green for _ in range(8)]
-        self.update_all()
-
-    def failed_reading(self):
-        self.colors = [Color.red for _ in range(8)]
-        self.update_all()
-
-    def wait_reading(self):
-        self.colors = [Color.yellow for _ in range(8)]
-        self.update_all()
+def wait_reading():
+    pixels.show()
+    pixels.fill(Color.yellow)
+    pixels.show()
 
 class RFIDHandler:
     def __init__(self):
@@ -53,8 +47,8 @@ class RFIDHandler:
         self.was_read: bool = False
         self.last_detection: datetime = None
         self.last_card_uid = None
-        self.log_id = None  
-        self.machine_id = uuid.getnode() #  adres mac maliny
+        self.log_id = 0
+        self.machine_id = 1
 
     def read(self):
         (status, TagType) = self.MIFAREReader.MFRC522_Request(self.MIFAREReader.PICC_REQIDL)
@@ -66,7 +60,7 @@ class RFIDHandler:
                     self.was_read = True
                     self.last_detection = new_time
                     self.last_card_uid = uid
-                    self.log_id = random.randint(0, 2**31-1)
+                    self.log_id += 1
                     return self.was_read
                 return self.was_read
         else:
@@ -78,26 +72,27 @@ class RFIDHandler:
             "log_id": str(self.log_id),
             "date": self.last_detection.strftime("%d-%m-%Y %H:%M:%S"),
             "card_uid": str(self.last_card_uid),
-            "reader": str(self.machine_id)
+            "reader": (self.machine_id)
         }
         return data
 
 
 def play_sound_success():
-    GPIO.output(buzzerPin, GPIO.HIGH)
+    GPIO.output(buzzerPin, False)
     time.sleep(0.3)
-    GPIO.output(buzzerPin, GPIO.LOW)
+    GPIO.output(buzzerPin, True)
 
 
 def play_sound_failure():
     for i in range(3):
-        GPIO.output(buzzerPin, GPIO.HIGH)
+        GPIO.output(buzzerPin, False)
         time.sleep(0.1)
-        GPIO.output(buzzerPin, GPIO.LOW)
+        GPIO.output(buzzerPin, True)
         time.sleep(0.1)
+    GPIO.output(buzzerPin, GPIO.LOW)
 
 execute = True
-is_not_waiting_for_response = False
+is_waiting_for_response = False
 
 # OLED
 background = Image.new("RGB", (96, 64), "BLACK")
@@ -156,39 +151,41 @@ def publish_card_log(log_id, date, card_uid, reader):
 
 def process_message(client, userdata, message):
     response = (str(message.payload.decode("utf-8")))
+    print(f'response: {response}')
     if response == 'HTTP200':
-        led_handler.successful_reading()
+        successful_reading()
         play_sound_success()
     else:
-        led_handler.failed_reading()
+        failed_reading()
         play_sound_failure()
+    time.sleep(1)
     show_card_message()
+    clear()
     global is_waiting_for_response
     is_waiting_for_response = False
 
 
-# led handler
-led_handler = LedHandler()
-
 def readCardInLoop():
+    global is_waiting_for_response
     rfid_handler = RFIDHandler()
-    while execute and not is_waiting_for_response:
-        readCardValue = rfid_handler.read()
-        if readCardValue:
-            erase_oled()
-            oled_show()
-            global is_waiting_for_response
-            is_waiting_for_response = True
-            led_handler.wait_reading()
-            log_id, date, card_uid, reader = rfid_handler.get_data()
-            publish_card_log(log_id, date, card_uid, reader)
-            # czekanie na message od drugiej maliny
+    while execute:
+        while not is_waiting_for_response:
+            readCardValue = rfid_handler.read()
+            if readCardValue:
+                erase_oled()
+                oled_show()
+                is_waiting_for_response = True
+                wait_reading()
+                log_id, date, card_uid, reader = rfid_handler.get_data().values()
+                publish_card_log(log_id, date, card_uid, reader)
+                # czekanie na message od drugiej maliny
 
 
 def main():
     GPIO.add_event_detect(buttonRed, GPIO.FALLING, callback=redButtonPressedCallback, bouncetime=BOUNCE_TIME)
     disp.Init()
     disp.clear()
+    clear()
     show_card_message()
     connect_to_broker()
     readCardInLoop()
