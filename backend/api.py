@@ -1,4 +1,5 @@
 import datetime
+
 import json
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
@@ -34,7 +35,6 @@ class logs(db.Document):
 
 @app.route("/logs/add", methods=['POST'])
 def addLog():
-
     json_from_request = json.loads(request.json)
 
     if (type(request.json) is str):
@@ -49,6 +49,7 @@ def addLog():
         reader = request.json.get("reader", None)
 
     date = datetime.datetime.strptime(date, '%d-%m-%Y %H:%M:%S')
+
 
     new_log = logs(log_id=log_id, date=date, card_uid=card_uid, reader=reader)
     new_log.save()
