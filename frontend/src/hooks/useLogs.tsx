@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import useWebSocket from 'react-use-websocket';
 import _ from 'lodash';
 
-const socketUrl = 'ws://localhost:7001';
+const socketUrl = 'ws://10.108.33.125:7001';
 
 export const useLogs = () => {
   const [logs, setLogs] = useState<Log[]>([]);
@@ -22,7 +22,7 @@ export const useLogs = () => {
   });
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:5000/logs/get`, {
+    axios.get(`http://10.108.33.125:5000/logs/get`, {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
