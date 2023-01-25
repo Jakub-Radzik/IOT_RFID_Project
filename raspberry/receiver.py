@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import asyncio, websockets, datetime, neopixel, board, requests
 import json, uuid, random, time
 
@@ -6,9 +7,10 @@ import RPi.GPIO as GPIO
 
 from config import *
 from mfrc522 import MFRC522
-from datetime import datetime
+# from datetime import datetime
 
 BACKEND_API = 'http://localhost:5000'
+WEBSOCKET_URL = 'ws://localhost:7001'
 
 # obiekt na json i z niego stringify bo przez websocket
 # mogą iść tylko str
@@ -19,19 +21,16 @@ BACKEND_API = 'http://localhost:5000'
 
 # function
 async def send(message: str):
-    async with websockets.connect('ws://localhost:7001') as websocket:
+    async with websockets.connect(WEBSOCKET_URL) as websocket:
         await websocket.send(message)
-
-# invoke example
-asyncio.get_event_loop().run_until_complete(send(str(datetime.datetime.now())))
 
 
 def get_json_data(log_id, date, card_uid, reader):
     data = {
-            "log_id": log_id,
+            "id": log_id,
             "date": date,
             "card_uid": card_uid,
-            "reader": reader
+            "reader": int(reader)
         }   
     return json.dumps(data)
 
@@ -63,14 +62,27 @@ def publish_response(response):
 
 def process_message(client, userdata, message):
     log_id, date, card_uid, reader = (str(message.payload.decode("utf-8"))).split('#')
-    # save to db
-    # if successful publish response, send to ws and backend
     card_data = get_json_data(log_id, date, card_uid, reader)
-    response = requests.post('{BACKEND_API}/logs/add', data=card_data)
-    if response.status_code == 200:
+    print(card_data)
+    response = requests.post(f'{BACKEND_API}/logs/add', json=card_data)
+    card_info = {
+            "date": datetime.datetime.now().isoformat(),
+            "card_uid": card_uid,
+            "reader": int(reader),
+        }
+    readyMSG = json.dumps(card_info)
+    
+    try:
+        event_loop = asyncio.get_event_loop()
+    except RuntimeError as ex:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(send(readyMSG))
+    time.sleep(1)
+    if response.status_code == 201:
         # przeslanie odpowiedniego response do raspberki oraz przez websocket
         publish_response('HTTP200')
-        send(card_data)
     else:
         publish_response('HTTP400')
 

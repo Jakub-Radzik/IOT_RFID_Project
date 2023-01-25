@@ -9,6 +9,7 @@ const wss = new websocket.Server({ server });
 
 wss.on('connection', (ws, _) => {
     ws.on('message', (msg) => {
+        console.log(msg.toString());
         wss.clients.forEach(client => {
             client.send(msg.toString());
         });
